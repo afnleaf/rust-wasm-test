@@ -8,4 +8,5 @@ services:
       - ./server/public:/app/public
     environment:
       - PORT=3344
+      - RUST_LOG=debug
     #restart: unless-stopped
