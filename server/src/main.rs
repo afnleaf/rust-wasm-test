@@ -1,49 +1,28 @@
-use std::{
-    fs,
-    io::{prelude::*, BufReader},
-    net::{TcpListener, TcpStream},
-    thread,
-    time::Duration,
-};
+// extremely minimal code amount web server
+// 800mb of dependencies
 
-//local
-use server::ThreadPool;
+use actix_files as fs;
+use actix_web::{App, HttpServer, middleware};
 
-fn handle_connection(mut stream: TcpStream) {
-    let buf_reader = BufReader::new(&stream);
-    let request_line = buf_reader.lines().next().unwrap().unwrap();
-
-    let (status_line, filename) = match &request_line[..] {
-        "GET / HTTP/1.1" => ("HTTP/1.1 200 OK", "./public/index.html"),
-        "GET /sleep HTTP/1.1" => {
-            thread::sleep(Duration::from_secs(5));
-            ("HTTP/1.1 200 OK", "./public/index.html")
-        }
-        _ => ("HTTP/1.1 404 NOT FOUND", "./public/404.html")
-    };
-    
-    let contents = fs::read_to_string(filename).unwrap();
-    let length = contents.len();
-
-    let response = 
-        format!("{status_line}\r\n\
-            Content-Length: {length}\r\n\
-            \r\n{contents}");
-    stream.write_all(response.as_bytes()).unwrap();
-}
-
-fn main() {
-    let listener = TcpListener::bind("127.0.0.1:7878")
-        .expect("listener broke, oh no.");
-    let request_pool = ThreadPool::new(4);
-
-    for stream in listener.incoming() {
-        let stream = stream.unwrap();
-        
-        request_pool.execute(|| {
-            handle_connection(stream);
-        });
-
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    unsafe {
+        std::env::set_var("RUST_LOG", "actix_web=info");
     }
-}
+    env_logger::init();
 
+    println!("Starting server at http://127.0.0.1:8080");
+
+    HttpServer::new(|| {
+        App::new()
+            .wrap(middleware::Logger::default())
+            .service(
+                fs::Files::new("/", "./public")
+                    .index_file("index.html")
+                    .show_files_listing()
+            )
+    })
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
+}
