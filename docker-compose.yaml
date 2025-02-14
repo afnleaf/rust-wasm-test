@@ -1,12 +1,11 @@
 services:
   web:
     build:
-      context: ./server
+      context: .
     ports:
-      - "3344:3344"
-    volumes:
-      - ./server/public:/app/public
+      - "7878:7878"
     environment:
-      - PORT=3344
+      - PORT=7878
       - RUST_LOG=debug
     #restart: unless-stopped
+

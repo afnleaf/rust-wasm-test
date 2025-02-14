@@ -75,7 +75,8 @@ async fn main() -> std::io::Result<()> {
                     .prefer_utf8(true)
             )
     })
-    .bind("127.0.0.1:7878")?
+    //.bind("127.0.0.1:7878")?
+    .bind("0.0.0.0:7878")?
     .run()
     .await
 }
