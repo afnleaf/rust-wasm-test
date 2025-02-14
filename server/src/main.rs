@@ -1,5 +1,9 @@
 use actix_web::{get, middleware, App, HttpServer, Result};
 use maud::{html, Markup, DOCTYPE, PreEscaped};
+use std::path::PathBuf;
+use std::env;
+
+mod builder;
 
 #[get("/")]
 async fn index() -> Result<Markup> {
@@ -39,6 +43,15 @@ async fn index() -> Result<Markup> {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    // build wasm app to pkg
+    // cargo manifest dir is where cargo of the running executable is
+    let server_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR")
+                            .unwrap());
+    let wasm_dir = server_dir.parent().unwrap().join("wasm-app");
+    println!("{:?}", wasm_dir);
+    builder::build_wasm(wasm_dir)?;
+
+
     //let port = "7878";
     //let ip = "127.0.0.1:";
     let pkg_path = std::path::Path::new("./wasm-app/pkg");
